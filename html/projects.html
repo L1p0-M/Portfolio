@@ -1,0 +1,159 @@
+<!-- ==================== Projects Section ==================== -->
+<section id="projects" class="section">
+    <div class="section-divider"></div>
+    <h2 class="section-title">Projects</h2>
+    <p class="section-subtitle">What I'm working on or have built…</p>
+
+    <div class="projects-grid">
+
+        <!-- Project 0 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-solid fa-server"></i></div>
+            <h3 class="project-title">Homelab Infrastructure</h3>
+            <div class="project-tech">
+                <span class="tech-tag">Proxmox</span>
+                <span class="tech-tag">4-Node Cluster</span>
+                <span class="tech-tag">Ansible</span>
+                <span class="tech-tag">GitHub Actions</span>
+                <span class="tech-tag">Docker Compose</span>
+                <span class="tech-tag">LXC</span>
+                <span class="tech-tag">Terraform</span>
+            </div>
+            <p class="project-desc">
+                Self-hosted 4-node physical server cluster running on Proxmox — the core of my
+                DevOps homelab. Everything is documented, configured, and automated via code.
+                From bare metal provisioning to running services, every layer is tracked in a
+                GitOps workflow with full IaC documentation.
+            </p>
+            <div class="project-links">
+                <a href="https://github.com/L1p0-M/Homelab" target="_blank" rel="noopener" class="project-link">
+                    <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a href="homelab-gallery.html" class="project-link">
+                    <i class="fa-regular fa-images"></i> Gallery <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a href="homelab-details.html" class="project-link">
+                    <i class="fa-regular fa-file-lines"></i> Learn More <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Project 1 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <h3 class="project-title">Portfolio Website</h3>
+            <div class="project-tech">
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">Nginx</span>
+                <span class="tech-tag">Alpine</span>
+                <span class="tech-tag">HTML/CSS/JS</span>
+            </div>
+            <p class="project-desc">
+                My personal portfolio site with Docker-based deployment. Rootless Nginx Alpine
+                container, tini PID 1 init process.
+                Modern responsive design in blue tones. This is the very page you're
+                viewing right now.
+            </p>
+            <div class="project-links">
+                <a href="https://github.com/l1p0-m/Portfolio" target="_blank" rel="noopener" class="project-link">
+                    <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-brands fa-linux"></i></div>
+            <h3 class="project-title">L1p0 Menus</h3>
+            <div class="project-tech">
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">Wayland</span>
+                <span class="tech-tag">Hyprland</span>
+                <span class="tech-tag">Waybar</span>
+                <span class="tech-tag">DBus</span>
+                <span class="tech-tag">GTK4</span>
+                <span class="tech-tag">Arch Linux</span>
+                <span class="tech-tag">CSS</span>
+            </div>
+            <p class="project-desc">
+                A single daemon that manages all Wayland/Hyprland/Waybar popup menus.
+                Fully event-driven, subscribes to dbus events, no polling -> uses 0% CPU at idle.
+                Also available in the AUR (l1p0-menus-git).
+            </p>
+            <div class="project-links">
+                <a href="https://github.com/L1p0-M/l1p0-menus" target="_blank" rel="noopener" class="project-link">
+                    <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Project 3 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-solid fa-paint-roller"></i></div>
+            <h3 class="project-title">Renovate-Cron</h3>
+            <div class="project-tech">
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">Renovate</span>
+                <span class="tech-tag">Cron</span>
+                <span class="tech-tag">GHCR</span>
+            </div>
+            <p class="project-desc">
+                Self-hosted Renovate-bot Docker image with an integrated cron scheduler.
+                Automated dependency updates on a defined schedule (Configurable timezone with env variables).
+                Comes with every function from the upstream renovatebot, like branch creation windows and auto-merge support.
+                Published to GHCR.
+            </p>
+            <div class="project-links">
+                <a href="https://github.com/L1p0-M/Renovate-Cron" target="_blank" rel="noopener" class="project-link">
+                    <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Project 4 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-brands fa-github"></i></div>
+            <h3 class="project-title">GitHub Runner Docker</h3>
+            <div class="project-tech">
+                <span class="tech-tag">Docker</span>
+                <span class="tech-tag">GitHub Actions</span>
+                <span class="tech-tag">Self-hosted</span>
+                <span class="tech-tag">DinD</span>
+                <span class="tech-tag">GHCR</span>
+            </div>
+            <p class="project-desc">
+                Self-hosted GitHub Runner running in Docker with Docker-in-Docker (DinD)
+                support. Auto-scaling orchestrator for CI/CD pipelines — spin up emphemeral runners on
+                demand, manage concurrency, and keep builds fast. Published to GHCR.
+            </p>
+            <div class="project-links">
+                <a href="https://github.com/L1p0-M/github-runner-docker" target="_blank" rel="noopener" class="project-link">
+                    <i class="fa-brands fa-github"></i> GitHub <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Project 5 -->
+        <div class="project-card">
+            <div class="project-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+            <h3 class="project-title">Industrial Automation System</h3>
+            <div class="project-tech">
+                <span class="tech-tag">PLC</span>
+                <span class="tech-tag">SCADA</span>
+                <span class="tech-tag">Modbus</span>
+                <span class="tech-tag">OPC-UA</span>
+            </div>
+            <p class="project-desc">
+                Daily work: Building industrial automation systems in Vienna.
+                PLC programming, SCADA integration, Modbus/OPC-UA communication. The "brain"
+                of production lines — where the physical world meets the digital.
+            </p>
+            <div class="project-links">
+                <a href="#" class="project-link">
+                    <i class="fa-solid fa-lock"></i> Proprietary
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>

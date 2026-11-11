@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Martin Lipovics — Homelab Deep Dive">
+    <meta name="author" content="Lipovics Martin">
+    <title>Martin Lipovics — Homelab Deep Dive</title>
+
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ==================== Navbar ==================== -->
+    <div id="navbar-container"></div>
+
+    <!-- ==================== Back Button ==================== -->
+    <section style="padding-top: 120px; padding-bottom: 0; max-width: var(--max-width); margin: 0 auto;">
+        <a href="index.html#projects" class="project-link" style="margin-bottom: 2rem; display: inline-flex;">
+            ← Back to Projects
+        </a>
+    </section>
+
+    <!-- ==================== Homelab Deep Dive ==================== -->
+    <section id="homelab-details" class="section">
+        <div class="section-divider"></div>
+        <h2 class="section-title">Homelab Infrastructure — Deep Dive</h2>
+        <p class="section-subtitle">Full architecture, workflow, and technology stack of my DevOps playground.</p>
+
+        <!-- Architecture Diagram -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 2.5rem; margin-bottom: 3rem;">
+            <h3 style="color: var(--accent-blue); font-size: 1.3rem; margin-bottom: 2rem;">Architecture Overview</h3>
+
+            <svg class="architecture-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 1360" width="100%" height="100%" style="background-color: #0a1628; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #e2e8f0; border-radius: 12px; border: 1px solid rgba(74, 158, 255, 0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    
+                <!-- Definíciók -->
+                <defs>
+                    <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#4a9eff" />
+                    </marker>
+                    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+                    </marker>
+                </defs>
+
+                <!-- ================= 0. LAYER: CLOUDFLARE EDGE ================= -->
+                <g transform="translate(30, 30)">
+                    <rect x="0" y="0" width="1080" height="115" rx="12" fill="#0f1d35" stroke="#38bdf8" stroke-width="1.5" filter="url(#glow-blue)"/>
+                    <text x="25" y="28" font-size="14" font-weight="700" fill="#38bdf8" letter-spacing="0.5">CLOUDFLARE EDGE (External Ingress &amp; Security)</text>
+                    <text x="25" y="46" font-size="11" fill="#94a3b8">Global WAF, DNS &amp; Traffic Filtering (IaC Managed)</text>
+
+                    <!-- Cloudflare Box -->
+                    <g transform="translate(25, 60)">
+                        <rect x="0" y="0" width="1030" height="42" rx="6" fill="#132240" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="20" y="26" font-size="12" font-weight="600" fill="#e2e8f0">Cloudflare DNS &amp; Proxy</text>
+                        <text x="185" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#38bdf8">🔒 Proxied CNAME Records</text>
+                        <text x="430" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#38bdf8">🌍 Country Block / WAF Rules</text>
+                        <text x="805" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#64748b">Synced via DDNS LXC</text>
+                    </g>
+                </g>
+
+                <!-- ================= 1. NODE: FIREWALL NODE ================= -->
+                <g transform="translate(30, 165)">
+                    <rect x="0" y="0" width="1080" height="155" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.2)" stroke-width="1"/>
+                    <text x="25" y="28" font-size="14" font-weight="700" fill="#4a9eff" letter-spacing="0.5">FIREWALL NODE (Dedicated)</text>
+                    <text x="25" y="46" font-size="11" fill="#64748b">Perimeter Defense &amp; Local DNS</text>
+
+                    <!-- OPNSense VM -->
+                    <g transform="translate(25, 60)">
+                        <rect x="0" y="0" width="500" height="80" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">OPNSense VM</text>
+                        <rect x="110" y="12" width="105" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="162" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">NIC Passthrough</text>
+                        <text x="15" y="46" font-size="11" fill="#94a3b8">Core Firewall, Port Forwarding (80/443) &amp; DHCP</text>
+                        <text x="15" y="64" font-size="10" font-family="'JetBrains Mono', monospace" fill="#64748b">Primary Gateway / WAN Ingress</text>
+                    </g>
+
+                    <!-- Pi-hole LXC -->
+                    <g transform="translate(545, 60)">
+                        <rect x="0" y="0" width="510" height="80" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Pi-hole LXC</text>
+                        <rect x="100" y="12" width="60" height="18" rx="4" fill="#0a1628"/>
+                        <text x="130" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#64748b">Debian</text>
+                        <text x="15" y="46" font-size="11" fill="#94a3b8">Network-wide AdBlocker &amp; Primary Local DNS</text>
+                        <text x="15" y="64" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">Upstream local resolution</text>
+                    </g>
+                </g>
+
+                <!-- ================= 2. NODE: MAIN PVE NODE ================= -->
+                <g transform="translate(30, 335)">
+                    <rect x="0" y="0" width="1080" height="510" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.2)" stroke-width="1"/>
+                    <text x="25" y="28" font-size="14" font-weight="700" fill="#4a9eff" letter-spacing="0.5">MAIN NODE</text>
+                    <text x="25" y="46" font-size="11" fill="#64748b">Core Virtualization &amp; Application Layer</text>
+
+                    <!-- --- VMs SECTION --- -->
+                    <text x="25" y="75" font-size="12" font-weight="600" fill="#94a3b8">VIRTUAL MACHINES (VMs)</text>
+
+                    <!-- TrueNAS VM -->
+                    <g transform="translate(25, 88)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">TrueNAS VM</text>
+                        <rect x="110" y="12" width="110" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="165" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">HBA Passthrough</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Primary Storage NAS</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">ZFS Pools / Storage target</text>
+                        <text x="15" y="85" font-size="10" fill="#64748b">Snapshots for Backup Node</text>
+                    </g>
+
+                    <!-- Docker Prod VM -->
+                    <g transform="translate(290, 88)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Docker Prod VM</text>
+                        <text x="150" y="25" font-size="10" fill="#64748b">Ubuntu Server</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Production Docker Stacks</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Tag-pinned containers</text>
+                        <text x="15" y="85" font-size="10" fill="#38bdf8">Nginx Proxy Manager</text>
+                    </g>
+
+                    <!-- CI-Worker VM -->
+                    <g transform="translate(555, 88)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">CI-Worker VM</text>
+                        <text x="140" y="25" font-size="10" fill="#64748b">Ubuntu Server</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">CI/CD Engine</text>
+                        <text x="15" y="70" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">Renovate-Cron</text>
+                        <text x="15" y="85" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">GitHub Actions Runners</text>
+                    </g>
+
+                    <!-- Media VM -->
+                    <g transform="translate(820, 88)">
+                        <rect x="0" y="0" width="235" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Media VM</text>
+                        <text x="130" y="25" font-size="10" fill="#64748b">Ubuntu</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Public Media Server</text>
+                        <text x="15" y="70" font-size="10" fill="#38bdf8">Isolated DMZ Zone</text>
+                        <text x="15" y="85" font-size="10" fill="#64748b">Plex/Jellyfin/Arr Stack</text>
+                    </g>
+
+                    <!-- Docs-Monitoring VM -->
+                    <g transform="translate(25, 200)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Docs-Monitoring VM</text>
+                        <text x="175" y="25" font-size="10" fill="#64748b">Ubuntu</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Prometheus &amp; Grafana</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Speedtest exporter</text>
+                        <text x="15" y="85" font-size="10" fill="#38bdf8">Central Metrics Collector</text>
+                    </g>
+
+                    <!-- Home Assistant VM -->
+                    <g transform="translate(290, 200)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Home Assistant VM</text>
+                        <text x="165" y="25" font-size="10" fill="#64748b">HASS OS</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Smart Home Hub</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Automations &amp; Zigbee</text>
+                        <text x="15" y="85" font-size="10" fill="#38bdf8">Integrates w/ Voice Agent</text>
+                    </g>
+
+                    <!-- WHPrinter VM (Mérete igazítva a többi VM-hez!) -->
+                    <g transform="translate(555, 200)">
+                        <rect x="0" y="0" width="250" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">WHPrinter VM</text>
+                        <rect x="110" y="12" width="115" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="167" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">USB-Wireless</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">USB to Wireless Printer</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Lightweight Alpine Linux</text>
+                        <text x="15" y="85" font-size="10" fill="#64748b">CUPS / AirPrint Server</text>
+                    </g>
+
+                    <!-- --- LXC CONTAINERS SECTION --- -->
+                    <text x="25" y="330" font-size="12" font-weight="600" fill="#94a3b8">SYSTEM LXC CONTAINERS</text>
+
+                    <!-- Cloudflare-DDNS LXC -->
+                    <g transform="translate(25, 345)">
+                        <rect x="0" y="0" width="335" height="100" rx="8" fill="#132240" stroke="#38bdf8" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Cloudflare-DDNS LXC</text>
+                        <text x="275" y="25" font-size="10" fill="#64748b">Debian</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Automated Dynamic DNS Updater</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Keeps Cloudflare records synced</text>
+                        <text x="15" y="85" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">WAN IP Monitor</text>
+                    </g>
+
+                    <!-- Wireguard LXC -->
+                    <g transform="translate(372, 345)">
+                        <rect x="0" y="0" width="335" height="100" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Wireguard LXC</text>
+                        <text x="275" y="25" font-size="10" fill="#64748b">Debian</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">Secure Remote Access VPN Server</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Encrypted tunnel to Home Network</text>
+                        <text x="15" y="85" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">Admin Remote Ingress</text>
+                    </g>
+
+                    <!-- Network-UPS LXC -->
+                    <g transform="translate(720, 345)">
+                        <rect x="0" y="0" width="335" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Network-UPS LXC</text>
+                        <rect x="135" y="12" width="115" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="192" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">USB UPS Passthrough</text>
+                        <text x="15" y="50" font-size="11" fill="#94a3b8">NUT Server &amp; Cluster Shutdown</text>
+                        <text x="15" y="70" font-size="10" fill="#64748b">Monitors Physical Battery Backup</text>
+                    </g>
+                </g>
+
+                <!-- ================= 3. NODE: AI CLUSTER NODE ================= -->
+                <g transform="translate(30, 865)">
+                    <rect x="0" y="0" width="1080" height="305" rx="12" fill="#0f1d35" stroke="#38bdf8" stroke-width="1.5" filter="url(#glow-blue)"/>
+                    <text x="25" y="28" font-size="14" font-weight="700" fill="#38bdf8" letter-spacing="0.5">AI CLUSTER NODE (GPU Acceleration Node)</text>
+                    <text x="25" y="46" font-size="11" fill="#94a3b8">Dedicated Hardware for Local LLM &amp; Voice Pipelines</text>
+
+                    <!-- AI LXC (llama.cpp) -->
+                    <g transform="translate(25, 65)">
+                        <rect x="0" y="0" width="245" height="110" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">AI LXC</text>
+                        <rect x="120" y="12" width="110" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="175" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">GPU Passthrough</text>
+                        <text x="15" y="50" font-size="11" font-weight="600" fill="#38bdf8">llama.cpp Engine</text>
+                        <text x="15" y="70" font-size="10" fill="#94a3b8">Local LLM Model Server</text>
+                        <text x="15" y="88" font-size="10" fill="#64748b">Debian Container</text>
+                    </g>
+
+                    <!-- STT LXC (Whisper) -->
+                    <g transform="translate(285, 65)">
+                        <rect x="0" y="0" width="245" height="110" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">STT LXC</text>
+                        <rect x="120" y="12" width="110" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="175" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">GPU Passthrough</text>
+                        <text x="15" y="50" font-size="11" font-weight="600" fill="#38bdf8">Faster-Whisper</text>
+                        <text x="15" y="70" font-size="10" fill="#94a3b8">Speech-to-Text Processing</text>
+                        <text x="15" y="88" font-size="10" fill="#64748b">Debian Container</text>
+                    </g>
+
+                    <!-- TTS LXC (Omnivoice) -->
+                    <g transform="translate(545, 65)">
+                        <rect x="0" y="0" width="245" height="110" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">TTS LXC</text>
+                        <rect x="120" y="12" width="110" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="175" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">GPU Passthrough</text>
+                        <text x="15" y="50" font-size="11" font-weight="600" fill="#38bdf8">Omnivoice Engine</text>
+                        <text x="15" y="70" font-size="10" fill="#94a3b8">Text-to-Speech Synthesis</text>
+                        <text x="15" y="88" font-size="10" fill="#64748b">Debian Container</text>
+                    </g>
+
+                    <!-- Agent LXC (Hermes) -->
+                    <g transform="translate(805, 65)">
+                        <rect x="0" y="0" width="250" height="110" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5"/>
+                        <text x="15" y="25" font-size="13" font-weight="600" fill="#e2e8f0">Agent LXC</text>
+                        <text x="175" y="25" font-size="10" fill="#64748b">Debian</text>
+                        <text x="15" y="50" font-size="11" font-weight="600" fill="#38bdf8">Hermes Agent</text>
+                        <text x="15" y="70" font-size="10" fill="#94a3b8">Agentic Harness &amp; Orchestrator</text>
+                        <text x="15" y="88" font-size="10" fill="#64748b">Coordinates LLM, STT &amp; TTS</text>
+                    </g>
+
+                    <!-- AI-Tools VM -->
+                    <g transform="translate(25, 185)">
+                        <rect x="0" y="0" width="1030" height="100" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="20" y="30" font-size="14" font-weight="600" fill="#e2e8f0">AI-Tools VM</text>
+                        <text x="120" y="30" font-size="10" fill="#64748b">Ubuntu Server (Docker Host)</text>
+                        
+                        <g transform="translate(20, 45)">
+                            <rect x="0" y="0" width="300" height="40" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.15)"/>
+                            <text x="150" y="25" text-anchor="middle" font-size="11" fill="#38bdf8">MCP Servers (Model Context Protocol)</text>
+                        </g>
+
+                        <g transform="translate(335, 45)">
+                            <rect x="0" y="0" width="300" height="40" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.15)"/>
+                            <text x="150" y="25" text-anchor="middle" font-size="11" fill="#38bdf8">SearXNG Private Search Engine</text>
+                        </g>
+
+                        <g transform="translate(650, 45)">
+                            <rect x="0" y="0" width="360" height="40" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.15)"/>
+                            <text x="180" y="25" text-anchor="middle" font-size="11" fill="#94a3b8">Auxiliary AI Tooling &amp; API Integrations</text>
+                        </g>
+                    </g>
+                </g>
+
+                <!-- ================= 4. NODE: BACKUP NODE ================= -->
+                <g transform="translate(30, 1185)">
+                    <rect x="0" y="0" width="1080" height="145" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.3)" stroke-width="1.5"/>
+                    <text x="25" y="28" font-size="14" font-weight="700" fill="#4a9eff" letter-spacing="0.5">BACKUP NODE (Automated Off-State Node)</text>
+                    <text x="25" y="46" font-size="11" fill="#94a3b8">Weekly Auto Power-On / Off &amp; Cold Backup Target</text>
+                    
+                    <!-- TrueNAS Backup VM -->
+                    <g transform="translate(25, 60)">
+                        <rect x="0" y="0" width="1030" height="70" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)"/>
+                        <text x="20" y="25" font-size="14" font-weight="600" fill="#e2e8f0">TrueNAS Backup VM</text>
+                        <rect x="180" y="12" width="120" height="18" rx="4" fill="#0a1628" stroke="rgba(74, 158, 255, 0.3)"/>
+                        <text x="240" y="25" text-anchor="middle" font-size="10" font-family="'JetBrains Mono', monospace" fill="#38bdf8">HBA Passthrough</text>
+
+                        <text x="20" y="50" font-size="11" fill="#94a3b8">Cold Backup Target: Syncs snapshots from Main Node TrueNAS via rsync &amp; ZFS replication, then shuts down node.</text>
+                    </g>
+                </g>
+
+                <!-- ================= HÁLÓZATI ÉS ADATÁRAMLÁSI KAPCSOLATOK ================= -->
+                
+                <!-- 1. Cloudflare -> OPNSense (External Traffic) -->
+                <path d="M 1060 145 L 1060 160 L 530 160 L 530 220" stroke="#38bdf8" stroke-width="1.5" fill="none" marker-end="url(#arrow-cyan)"/>
+                <g transform="translate(700, 150)">
+                    <rect x="0" y="0" width="220" height="20" rx="4" fill="#0a1628" stroke="#38bdf8" stroke-width="0.8"/>
+                    <text x="110" y="13" text-anchor="middle" font-size="9" font-family="'JetBrains Mono', monospace" fill="#38bdf8">Filtered Ingress (Port 80/443)</text>
+                </g>
+
+                <!-- 2. OPNSense -> Docker Prod VM (Nginx Proxy Manager) -->
+                <path d="M 260 305 L 260 327 L 445 327 L 445 420" stroke="#4a9eff" stroke-width="1.5" fill="none" marker-end="url(#arrow-blue)"/>
+                <g transform="translate(285, 317)">
+                    <rect x="0" y="0" width="140" height="20" rx="4" fill="#0a1628" stroke="#4a9eff" stroke-width="0.8"/>
+                    <text x="70" y="13" text-anchor="middle" font-size="9" font-family="'JetBrains Mono', monospace" fill="#38bdf8">NPM Reverse Proxy</text>
+                </g>
+
+                <!-- 3. Connection: TrueNAS Main -> TrueNAS Backup (Belső sávra igazítva, tökéletesen látható felirattal) -->
+                <path d="M 50 470 L 15 470 L 15 1280 L 50 1280" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-cyan)"/>
+                <g transform="translate(15, 880) rotate(-90)">
+                    <rect x="-65" y="-10" width="130" height="20" rx="4" fill="#0a1628" stroke="#38bdf8" stroke-width="0.8"/>
+                    <text x="0" y="3" text-anchor="middle" font-size="9" font-family="'JetBrains Mono', monospace" fill="#38bdf8">ZFS / rsync Sync</text>
+                </g>
+
+            </svg>
+        </div>
+
+        <!-- Infrastructure Breakdown -->
+        <h3 style="color: var(--accent-blue); font-size: 1.5rem; margin-bottom: 1.5rem;">Infrastructure Breakdown</h3>
+
+        <div class="about-grid" style="margin-bottom: 4rem;">
+            <div class="about-text">
+                <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1rem;">Hardware Layer</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    The homelab runs on a multi-node physical cluster orchestrated through Proxmox VE.
+                    Infrastructure and configuration are fully managed via GitOps, using Terraform for resource provisioning,
+                    Ansible for automated rollouts, and SOPS + age for secure secrets encryption.
+                </p>
+                <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1rem; margin-top: 2rem;">Network Topology</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    Perimeter defense is secured by OPNsense with network-wide DNS adblocking via Pi-hole. External traffic enters through Cloudflare Edge (WAF & country block protection with proxied CNAME records kept in sync by a dedicated DDNS LXC),
+                    routed via port forwarding to Nginx Proxy Manager running on the Main node to distribute traffic to internal services.
+                    Remote LAN access is provided securely via a Wireguard LXC.
+                </p>
+            </div>
+            <div class="about-text">
+                <h4 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 1rem;">Node Responsibilities</h4>
+                <ul style="color: var(--text-secondary); font-size: 0.95rem; line-height: 2.2; list-style: none;">
+                    <li><strong style="color: #38bdf8;">Node 1 — Main Node:</strong> The Production node, hosting critical services and applications like Reverse Proxy, NAS, Github Actions Runner, Renovate-Cron, Media Server and other Docker stacks.</li>
+                    <li><strong style="color: #38bdf8;">Node 2 — Firewall Node:</strong> Dedicated perimeter security running OPNsense VM (NIC passthrough for routing/DHCP) and Pi-hole LXC.</li>
+                    <li><strong style="color: #38bdf8;">Node 3 — Backup Node:</strong> Powers on weekly via schedule to sync snapshots from Main TrueNAS via rsync and replicates it via ZFS replication, then automatically powers down.</li>
+                    <li><strong style="color: #38bdf8;">Node 4 — AI Node:</strong> GPU compute node running llama.cpp, AI Agent, MCP Servers. This is the Node where all AI magic happens.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CI/CD Pipeline -->
+        <h3 style="color: var(--accent-blue); font-size: 1.5rem; margin-bottom: 1.5rem;">CI/CD &amp; GitOps Workflow</h3>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 2.5rem; margin-bottom: 3rem;">
+            <svg class="architecture-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="100%" height="100%" style="background-color: #0a1628; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #e2e8f0; border-radius: 12px; border: 1px solid rgba(74, 158, 255, 0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    
+                <!-- Definíciók (Nyilak, Árnyékok, Gradiensek) -->
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#4a9eff" />
+                    </marker>
+                    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+                    </marker>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                <!-- --- 1. SZEKCIÓ: INICIÁLÁS & PULL REQUEST --- -->
+                <g transform="translate(50, 50)">
+                    <!-- Szekció háttérkártya -->
+                    <rect x="0" y="0" width="1100" height="220" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.12)" stroke-width="1" />
+                    <text x="30" y="30" font-size="14" font-weight="600" fill="#38bdf8" letter-spacing="0.5">1. DEVELOPMENT &amp; PULL REQUEST CHECKS</text>
+
+                    <!-- Main Branch -->
+                    <g transform="translate(30, 50)">
+                        <rect x="0" y="0" width="180" height="140" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5" filter="url(#glow)"/>
+                        <text x="90" y="35" text-anchor="middle" font-size="15" font-weight="600" fill="#e2e8f0">Main Branch</text>
+                        <text x="90" y="60" text-anchor="middle" font-size="12" fill="#94a3b8">Branch Protection</text>
+                        <text x="90" y="90" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">🔒 Locked / Safe</text>
+                    </g>
+
+                    <!-- Nyíl Main-ből -->
+                    <path d="M 215 120 L 270 120" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow)" />
+                    <text x="242" y="110" text-anchor="middle" font-size="11" fill="#94a3b8">Push / PR</text>
+
+                    <!-- Feature Branch & Renovate -->
+                    <g transform="translate(275, 50)">
+                        <rect x="0" y="0" width="180" height="140" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.12)" />
+                        <text x="90" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="#e2e8f0">Feature / PR</text>
+                        <text x="90" y="55" text-anchor="middle" font-size="11" fill="#94a3b8">User Push or</text>
+                        <text x="90" y="73" text-anchor="middle" font-size="11" fill="#38bdf8">🤖 Self-Hosted Renovate</text>
+                        <text x="90" y="105" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" fill="#64748b">(.env encrypted w/ SOPS+age)</text>
+                    </g>
+
+                    <!-- Nyíl Checkekhez -->
+                    <path d="M 458 120 L 510 120" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow)" />
+
+                    <!-- Automated Checks (CI) -->
+                    <g transform="translate(515, 50)">
+                        <rect x="0" y="0" width="555" height="140" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.12)" />
+                        <text x="20" y="30" font-size="14" font-weight="600" fill="#4a9eff">Automated PR Validation Checks</text>
+                        
+                        <!-- Check elemek -->
+                        <g transform="translate(20, 45)">
+                            <rect x="0" y="0" width="165" height="75" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="82.5" y="25" text-anchor="middle" font-size="12" font-weight="600" fill="#e2e8f0">Security &amp; Static</text>
+                            <text x="82.5" y="45" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">Gitleaks &amp; CodeQL</text>
+                        </g>
+
+                        <g transform="translate(195, 45)">
+                            <rect x="0" y="0" width="165" height="75" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="82.5" y="25" text-anchor="middle" font-size="12" font-weight="600" fill="#e2e8f0">Linting Rules</text>
+                            <text x="82.5" y="45" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" fill="#38bdf8">Ansible-lint / Yamllint</text>
+                            <text x="82.5" y="60" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" fill="#94a3b8">+ Compose validation</text>
+                        </g>
+
+                        <g transform="translate(370, 45)">
+                            <rect x="0" y="0" width="165" height="75" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="82.5" y="25" text-anchor="middle" font-size="12" font-weight="600" fill="#e2e8f0">Terraform Preview</text>
+                            <text x="82.5" y="45" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" fill="#38bdf8">terraform plan</text>
+                            <text x="82.5" y="60" text-anchor="middle" font-size="10" fill="#64748b">✍️ Posted as PR Comment</text>
+                        </g>
+                    </g>
+                </g>
+
+                <!-- --- 2. SZEKCIÓ: MERGE & DEPLOYMENT --- -->
+                <g transform="translate(50, 290)">
+                    <!-- Szekció háttérkártya -->
+                    <rect x="0" y="0" width="1100" height="300" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.12)" stroke-width="1" />
+                    <text x="30" y="30" font-size="14" font-weight="600" fill="#38bdf8" letter-spacing="0.5">2. MERGE TO MAIN &amp; TARGETED DEPLOYMENT</text>
+
+                    <!-- Merge esemény -->
+                    <g transform="translate(30, 60)">
+                        <rect x="0" y="0" width="180" height="210" rx="8" fill="#132240" stroke="#38bdf8" stroke-width="1.5" />
+                        <text x="90" y="35" text-anchor="middle" font-size="15" font-weight="600" fill="#e2e8f0">Merge to Main</text>
+                        <text x="90" y="65" text-anchor="middle" font-size="11" fill="#94a3b8">All checks passed</text>
+                        <text x="90" y="90" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#4a9eff">⚡ Trigger CD</text>
+                        <path d="M 45 120 L 135 120" stroke="rgba(74, 158, 255, 0.2)" stroke-dasharray="4" />
+                        <text x="90" y="150" text-anchor="middle" font-size="10" fill="#64748b">Ansible decrypts</text>
+                        <text x="90" y="165" text-anchor="middle" font-size="10" fill="#64748b">.env files via SOPS</text>
+                        <text x="90" y="185" text-anchor="middle" font-size="10" fill="#38bdf8">Jinja2 templates ➔ Configs</text>
+                    </g>
+
+                    <!-- Nyíl a szétágazáshoz -->
+                    <path d="M 215 165 L 265 165" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow)" />
+
+                    <!-- Deployment ágak -->
+                    <g transform="translate(275, 60)">
+                        <rect x="0" y="0" width="800" height="210" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.12)" />
+                        <text x="20" y="30" font-size="14" font-weight="600" fill="#4a9eff">Conditional Infrastructure Deployment</text>
+
+                        <!-- Terraform Apply -->
+                        <g transform="translate(20, 50)">
+                            <rect x="0" y="0" width="240" height="135" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="120" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#e2e8f0">Terraform Changes</text>
+                            <text x="120" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">terraform apply</text>
+                            <text x="120" y="85" text-anchor="middle" font-size="11" fill="#94a3b8">Infrastructure provisioned</text>
+                            <text x="120" y="105" text-anchor="middle" font-size="10" fill="#64748b">Proxmox VMs / Networks</text>
+                        </g>
+
+                        <!-- Ansible Full Site -->
+                        <g transform="translate(280, 50)">
+                            <rect x="0" y="0" width="240" height="135" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="120" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#e2e8f0">Ansible Changes</text>
+                            <text x="120" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">ansible-playbook site.yml</text>
+                            <text x="120" y="85" text-anchor="middle" font-size="11" fill="#94a3b8">Full playbook execution</text>
+                            <text x="120" y="105" text-anchor="middle" font-size="10" fill="#64748b">Global system state sync</text>
+                        </g>
+
+                        <!-- Docker Compose / Host deployment -->
+                        <g transform="translate(540, 50)">
+                            <rect x="0" y="0" width="240" height="135" rx="6" fill="#0a1628" stroke="rgba(74, 158, 255, 0.2)" />
+                            <text x="120" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#e2e8f0">Docker Compose</text>
+                            <text x="120" y="55" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">Target Host Playbook</text>
+                            <text x="120" y="85" text-anchor="middle" font-size="11" fill="#94a3b8">Tag-pinned stacks deploy</text>
+                            <text x="120" y="105" text-anchor="middle" font-size="10" fill="#64748b">via Renovate updates</text>
+                        </g>
+                    </g>
+                </g>
+
+                <!-- --- 3. SZEKCIÓ: POST-DEPLOYMENT DOCS & AUTOMATION --- -->
+                <g transform="translate(50, 610)">
+                    <!-- Szekció háttérkártya -->
+                    <rect x="0" y="0" width="1100" height="230" rx="12" fill="#0f1d35" stroke="rgba(74, 158, 255, 0.12)" stroke-width="1" />
+                    <text x="30" y="30" font-size="14" font-weight="600" fill="#38bdf8" letter-spacing="0.5">3. POST-DEPLOYMENT DOCUMENTATION AUTOMATION</text>
+
+                    <!-- Terraform trigger -->
+                    <g transform="translate(30, 55)">
+                        <rect x="0" y="0" width="220" height="150" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)" />
+                        <text x="110" y="35" text-anchor="middle" font-size="14" font-weight="600" fill="#e2e8f0">Terraform Update</text>
+                        <text x="110" y="60" text-anchor="middle" font-size="11" fill="#94a3b8">If Terraform modified</text>
+                        <text x="110" y="90" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">📄 terraform.tfvars</text>
+                        <text x="110" y="115" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">📊 metadata.yaml</text>
+                    </g>
+
+                    <!-- Nyíl -->
+                    <path d="M 255 130 L 325 130" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow)" />
+                    <text x="290" y="120" text-anchor="middle" font-size="11" fill="#64748b">Triggers CI</text>
+
+                    <!-- README Generator Workflow -->
+                    <g transform="translate(330, 55)">
+                        <rect x="0" y="0" width="350" height="150" rx="8" fill="#132240" stroke="#4a9eff" stroke-width="1.5" filter="url(#glow)"/>
+                        <text x="175" y="35" text-anchor="middle" font-size="14" font-weight="600" fill="#e2e8f0">README Generator Workflow</text>
+                        <text x="175" y="65" text-anchor="middle" font-size="11" fill="#94a3b8">Automatically parses variables and metadata</text>
+                        <text x="175" y="95" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">⚙️ Generates Host README.md</text>
+                        <text x="175" y="120" text-anchor="middle" font-size="10" fill="#64748b">Self-documenting homelab architecture</text>
+                    </g>
+
+                    <!-- Nyíl -->
+                    <path d="M 685 130 L 755 130" stroke="#4a9eff" stroke-width="2" marker-end="url(#arrow)" />
+                    <text x="720" y="120" text-anchor="middle" font-size="11" fill="#64748b">Opens PR</text>
+
+                    <!-- Pull Request for Documentation -->
+                    <g transform="translate(760, 55)">
+                        <rect x="0" y="0" width="310" height="150" rx="8" fill="#132240" stroke="rgba(74, 158, 255, 0.2)" />
+                        <text x="155" y="35" text-anchor="middle" font-size="14" font-weight="600" fill="#e2e8f0">Documentation PR</text>
+                        <text x="155" y="65" text-anchor="middle" font-size="11" fill="#94a3b8">Submits automated PR for review</text>
+                        <text x="155" y="95" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#38bdf8">🔄 Automatic README Update</text>
+                        <text x="155" y="120" text-anchor="middle" font-size="10" fill="#64748b">Keeps repository documentation fresh</text>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <!-- Technology Stack -->
+        <h3 style="color: var(--accent-blue); font-size: 1.5rem; margin-bottom: 1.5rem;">Technology Stack</h3>
+
+        <div class="projects-grid" style="margin-bottom: 4rem;">
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-server"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">Infrastructure</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">Proxmox VE</span>
+                    <span class="tech-tag">LXC Containers</span>
+                    <span class="tech-tag">ZFS</span>
+                    <span class="tech-tag">OPNsense</span>
+                    <span class="tech-tag">Virtual Machines</span>
+                    <span class="tech-tag">CloudInit</span>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-cogs"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">Configuration Management</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">Ansible</span>
+                    <span class="tech-tag">Ansible Vault</span>
+                    <span class="tech-tag">Terraform</span>
+                    <span class="tech-tag">Docker Compose</span>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-sync-alt"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">CI/CD &amp; GitOps</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">GitHub Actions</span>
+                    <span class="tech-tag">Self-hosted Runner</span>
+                    <span class="tech-tag">Renovate</span>
+                    <span class="tech-tag">Checks</span>
+                    <span class="tech-tag">Git Push → Deploy</span>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-robot"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">AI &amp; Automation</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">Ollama & llama.cpp</span>
+                    <span class="tech-tag">Agent LXC</span>
+                    <span class="tech-tag">MCP Server</span>
+                    <span class="tech-tag">RAG</span>
+                    <span class="tech-tag">LoRa Fine-tuning</span>
+                    <span class="tech-tag">FastAPI Tools</span>
+                    <span class="tech-tag">Agent Sandboxing</span>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-shield-alt"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">Security &amp; Ops</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">Pi-hole</span>
+                    <span class="tech-tag">Vault</span>
+                    <span class="tech-tag">Branch Protection</span>
+                    <span class="tech-tag">Python Lint</span>
+                    <span class="tech-tag">Ansible Lint</span>
+                    <span class="tech-tag">Yaml Lint</span>
+                    <span class="tech-tag">Terraform Validate</span>
+                    <span class="tech-tag">SOPS & Age</span>
+                    <span class="tech-tag">Envsubst</span>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-icon"><i class="fa-solid fa-hdd"></i></div>
+                <h4 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 0.75rem;">Storage &amp; Backup</h4>
+                <div class="project-tech">
+                    <span class="tech-tag">Proxmox Backup</span>
+                    <span class="tech-tag">ZFS Pool</span>
+                    <span class="tech-tag">iSCSI</span>
+                    <span class="tech-tag">File Server</span>
+                    <span class="tech-tag">SMB & NFS Share</span>
+                    <span class="tech-tag">3-2-1 Backup Strategy</span>
+                    <span class="tech-tag">Snapshotting</span>
+                    <span class="tech-tag">TrueNAS</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Link -->
+        <div style="text-align: center; padding: 3rem 0; border-top: 1px solid var(--border-color);">
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                See the homelab come to life — from Raspberry Pi beginnings to full rack setup.
+            </p>
+            <a href="homelab-gallery.html" class="btn btn-primary">View Gallery →</a>
+        </div>
+
+    </section>
+
+    <!-- ==================== Footer ==================== -->
+    <div id="footer-container"></div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
