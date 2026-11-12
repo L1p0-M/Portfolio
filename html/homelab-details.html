@@ -7,7 +7,6 @@
     <meta name="author" content="Lipovics Martin">
     <title>Martin Lipovics — Homelab Deep Dive</title>
 
-    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,16 +16,11 @@
 </head>
 <body>
 
-    <!-- ==================== Navbar ==================== -->
-    <div id="navbar-container"></div>
+    <!-- ==================== Includes ==================== -->
+    <!--# include virtual="/includes/navbar.html" -->
+    <!--# include virtual="/includes/back_btn.html" -->
 
-    <!-- ==================== Back Button ==================== -->
-    <section style="padding-top: 120px; padding-bottom: 0; max-width: var(--max-width); margin: 0 auto;">
-        <a href="index.html#projects" class="project-link" style="margin-bottom: 2rem; display: inline-flex;">
-            ← Back to Projects
-        </a>
-    </section>
-
+ 
     <!-- ==================== Homelab Deep Dive ==================== -->
     <section id="homelab-details" class="section">
         <div class="section-divider"></div>
@@ -629,8 +623,8 @@
     </section>
 
     <!-- ==================== Footer ==================== -->
-    <div id="footer-container"></div>
+    <!--# include virtual="/includes/footer.html" -->
 
-    <script src="assets/js/main.js"></script>
+    <script src="/assets/js/main.js"></script>
 </body>
 </html>

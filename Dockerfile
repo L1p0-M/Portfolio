@@ -6,15 +6,14 @@ RUN rm -rf /etc/nginx/conf.d/default.conf && \
     mkdir -p /etc/nginx/conf.d
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 COPY html/ /usr/share/nginx/html/
 COPY assets/ /usr/share/nginx/html/assets/
+COPY assets/images/favicon.ico /usr/share/nginx/html/favicon.ico
+COPY includes/ /usr/share/nginx/html/includes/
 
-RUN chown -R nginx:nginx /etc/nginx \
-    && chown -R nginx:nginx /var/cache/nginx \
-    && chown -R nginx:nginx /var/log/nginx \
-    && chown -R nginx:nginx /run \
-    && chown -R nginx:nginx /usr/share/nginx
+RUN chown -R nginx:nginx /var/cache/nginx
+RUN sed -i -e 's#/run/nginx.pid#/tmp/nginx.pid#' \
+           -e '/^user /d' /etc/nginx/nginx.conf
 
 USER nginx
 
