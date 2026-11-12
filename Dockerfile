@@ -1,6 +1,6 @@
-FROM nginx:alpine
+FROM nginx:1.31.8-alpine
 
-RUN apk add --no-cache tini curl
+RUN apk add --no-cache tini
 
 RUN rm -rf /etc/nginx/conf.d/default.conf && \
     mkdir -p /etc/nginx/conf.d
@@ -20,7 +20,7 @@ USER nginx
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=60s --timeout=3s CMD curl -fs http://localhost:8080/ || exit 1
+HEALTHCHECK --interval=60s --timeout=3s CMD wget -qO- http://localhost:8080/ || exit 1
 
 ENTRYPOINT ["tini", "--"]
 CMD ["nginx", "-g", "daemon off;"]
