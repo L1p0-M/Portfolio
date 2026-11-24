@@ -9,6 +9,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY html/ /usr/share/nginx/html/
 COPY assets/ /usr/share/nginx/html/assets/
 COPY assets/images/favicon.ico /usr/share/nginx/html/favicon.ico
+COPY assets/robots.txt /usr/share/nginx/html/robots.txt
+COPY assets/sitemap.xml /usr/share/nginx/html/sitemap.xml
 COPY includes/ /usr/share/nginx/html/includes/
 
 RUN chown -R nginx:nginx /var/cache/nginx

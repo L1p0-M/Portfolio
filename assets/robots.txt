@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /homelab-details.html
+Disallow: /homelab-gallery.html
+
+Sitemap: https://portfolio.l1p0-industries.hu/sitemap.xml
